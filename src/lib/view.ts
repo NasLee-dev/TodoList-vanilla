@@ -29,17 +29,17 @@ export default abstract class View {
 
   protected async updateView(): Promise<void> {
     try {
-      await this.events.onBeforeRender?.()
-      const newContent = this.renderTemplate
-      const diff = this.shouldUpdateDOM(this.container.innerHTML, newContent)
+      await this.events.onBeforeRender?.() //  렌더링 전 이벤트 발생
+      const newContent = this.renderTemplate //  렌더링할 새로운 컨텐츠
+      const diff = this.shouldUpdateDOM(this.container.innerHTML, newContent) //  업데이트 여부 확인
 
       if (diff) {
-        this.container.innerHTML = newContent
+        this.container.innerHTML = newContent //  업데이트
       }
-      this.renderTemplate = this.template
-      this.isRendered = true
+      this.renderTemplate = this.template //  템플릿 초기화
+      this.isRendered = true //  렌더링 완료
 
-      await this.events.onAfterRender?.()
+      await this.events.onAfterRender?.() //  렌더링 후 이벤트 발생
     } catch (error) {
       console.error('뷰 업데이트 중 에러 발생:', error)
       throw error
@@ -101,6 +101,7 @@ export default abstract class View {
     this.templateCache.set(cacheKey, this.renderTemplate)
   }
 
+  //  여러 개의 데이터를 한 번에 템플릿에 삽입
   protected setMultipleTemplateData(data: Record<string, string>): void {
     Object.entries(data).forEach(([key, value]) => {
       this.setTemplateData(key, value)
