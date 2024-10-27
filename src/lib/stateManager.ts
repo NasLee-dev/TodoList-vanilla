@@ -61,28 +61,33 @@ export default class StateManager {
   private notifySubscribers(prevState: StateProps): void {
     const changedKeys = Object.keys(this.state).filter(
       key =>
-        this.state[key as keyof StateProps] !==
-        prevState[key as keyof StateProps]
+        !this.isEqual(
+          this.state[key as keyof StateProps],
+          prevState[key as keyof StateProps]
+        )
     )
 
-    const notifiedSubscribers = new Set<Subscriber>()
-    changedKeys.forEach(key => {
-      this.subscribers.forEach((subscriber, id) => {
-        if (!notifiedSubscribers.has(subscriber)) {
-          const selector = this.selectors.get(id)
-          if (selector) {
-            const prevValue = selector(prevState)
-            const newValue = selector(this.state)
-            if (!this.isEqual(prevValue, newValue)) {
-              subscriber()
-              notifiedSubscribers.add(subscriber)
-            }
-          } else {
-            subscriber()
-            notifiedSubscribers.add(subscriber)
-          }
-        }
-      })
+    if (changedKeys.length === 0) return
+
+    const notifiedScribers = new Set<Subscriber>()
+
+    this.subscribers.forEach((subscriber, id) => {
+      if (notifiedScribers.has(subscriber)) return //  이미 알린 구독자는 제외
+      const selector = this.selectors.get(id) //  구독자의 selector를 가져옴
+
+      if (!selector) {
+        subscriber(this.state.todoItems)
+        notifiedScribers.add(subscriber)
+        return
+      }
+
+      const prevValue = selector(prevState)
+      const newValue = selector(this.state)
+
+      if (!this.isEqual(prevValue, newValue)) {
+        subscriber(newValue)
+        notifiedScribers.add(subscriber)
+      }
     })
   }
 
@@ -92,12 +97,16 @@ export default class StateManager {
   ): void {
     this.subscribers.forEach((subscriber, id) => {
       const selector = this.selectors.get(id)
-      if (selector) {
-        const selectedPrevValue = selector({ ...this.state, [key]: prevValue })
-        const selectedNewValue = selector(this.state)
-        if (!this.isEqual(selectedPrevValue, selectedNewValue)) {
-          subscriber()
-        }
+      if (!selector) {
+        subscriber(this.state.todoItems)
+        return
+      }
+
+      const prevSelected = selector({ ...this.state, [key]: prevValue })
+      const newSelected = selector(this.state)
+
+      if (!this.isEqual(prevSelected, newSelected)) {
+        subscriber(newSelected)
       }
     })
   }
@@ -126,6 +135,8 @@ export default class StateManager {
     if (selector) {
       this.selectors.set(id, selector)
     }
+
+    subscriber(selector ? selector(this.state) : this.state.todoItems)
 
     return () => {
       this.subscribers.delete(id)

@@ -6,6 +6,6 @@ export interface StateProps {
 }
 
 export type StateKey = keyof StateProps
-export type Subscriber = () => void
+export type Subscriber = (Todo: Todo[]) => void
 export type StateSelector<T> = (state: StateProps) => T
 export type Unsubscribe = () => void

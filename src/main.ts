@@ -1,5 +1,5 @@
-import TodoView from './pages/todo/TodoView'
+import TodoView from './pages/todo/TodoList'
 import './style.css'
 
-const todoView = new TodoView()
+const todoView = TodoView('app')
 await todoView.render()
